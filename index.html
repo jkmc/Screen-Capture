@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Capture Screen</title>
+    <script>
+        async function captureScreen() {
+            try {
+                // Request permission to capture the screen
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const video = document.createElement("video");
+                video.srcObject = stream;
+
+                // Play the stream to render a frame for capturing
+                video.onloadedmetadata = async () => {
+                    video.play();
+
+                    // Create a canvas to capture the screenshot
+                    const canvas = document.createElement("canvas");
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Stop the video stream
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // Convert the canvas to an image
+                    const screenshot = canvas.toDataURL("image/png");
+
+                    // Send the screenshot to your server
+                    fetch('https://your-server.com/screenshot', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ screenshot }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert("Screenshot sent successfully!");
+                    })
+                    .catch(error => {
+                        console.error("Error sending screenshot:", error);
+                    });
+                };
+            } catch (err) {
+                console.error("Error capturing screen:", err);
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="captureScreen()">Capture Screen</button>
+</body>
+</html>
